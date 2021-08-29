@@ -54,7 +54,7 @@
 
 
 /**
- *          ______                    ______
+ *          ------                    ------
  *      NC | 1  2 | GND           5V | 1  2 | GND
  *   RESET | 3  4 | 1.31          NC | 3  4 | NC
  *    0.18 | 5  6   3.25          NC | 5  6   0.15
@@ -63,7 +63,6 @@
  *          ------                    ------
  *           EXP2                      EXP1
  */
-
 #define EXP1_03_PIN                        -1
 #define EXP1_04_PIN                        -1
 #define EXP1_05_PIN                        -1
@@ -81,7 +80,6 @@
 #define EXP2_08_PIN                        P3_26
 #define EXP2_09_PIN                        P0_15
 #define EXP2_10_PIN                        P0_17
-
 
 /**
  * LCD / Controller
