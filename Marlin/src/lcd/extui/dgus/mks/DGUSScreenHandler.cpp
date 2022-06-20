@@ -193,7 +193,6 @@ void DGUSScreenHandlerMKS::DGUSLCD_SendTMCStepValue(DGUS_VP_Variable &var) {
     if (!ExtUI::isPrintingFromMedia()) return; // avoid race condition when user stays in this menu and printer finishes.
     switch (swap16(*(uint16_t*)val_ptr)) {
       case 0: { // Resume
-
         auto cs = getCurrentScreen();
         if (runout_mks.runout_status != RUNOUT_WAITING_STATUS && runout_mks.runout_status != UNRUNOUT_STATUS) {
           if (cs == MKSLCD_SCREEN_PRINT || cs == MKSLCD_SCREEN_PAUSE)
@@ -213,7 +212,6 @@ void DGUSScreenHandlerMKS::DGUSLCD_SendTMCStepValue(DGUS_VP_Variable &var) {
       } break;
 
       case 1: // Pause
-
         GotoScreen(MKSLCD_SCREEN_PAUSE);
         if (!ExtUI::isPrintingFromMediaPaused()) {
           nozzle_park_mks.print_pause_start_flag = 1;
@@ -222,6 +220,7 @@ void DGUSScreenHandlerMKS::DGUSLCD_SendTMCStepValue(DGUS_VP_Variable &var) {
           //ExtUI::mks_pausePrint();
         }
         break;
+
       case 2: // Abort
         HandleUserConfirmationPopUp(VP_SD_AbortPrintConfirmed, nullptr, PSTR("Abort printing"), filelist.filename(), PSTR("?"), true, true, false, true);
         break;
@@ -565,7 +564,7 @@ void DGUSScreenHandlerMKS::MeshLevel(DGUS_VP_Variable &var, void *val_ptr) {
           queue.enqueue_now(F("G29S2"));
           mesh_point_count--;
           if (mks_language_index == MKS_English) {
-            const char level_buf_en2[] = "Level Finsh";
+            const char level_buf_en2[] = "Leveling Done";
             dgusdisplay.WriteVariable(VP_AutoLevel_1_Dis, level_buf_en2, 32, true);
           }
           else if (mks_language_index == MKS_SimpleChinese) {
@@ -1710,8 +1709,8 @@ void DGUSScreenHandlerMKS::DGUS_LanguageDisplay(uint8_t var) {
     const char Info_EEPROM_2_buf_en[] = "Revert setting?";
     dgusdisplay.WriteVariable(VP_Info_EEPROM_2_Dis, Info_EEPROM_2_buf_en, 32, true);
 
-    const char Info_PrinfFinsh_1_buf_en[] = "Print Done";
-    dgusdisplay.WriteVariable(VP_Info_PrinfFinsh_1_Dis, Info_PrinfFinsh_1_buf_en, 32, true);
+    const char Info_PrintFinish_1_buf_en[] = "Print Done";
+    dgusdisplay.WriteVariable(VP_Info_PrintFinish_1_Dis, Info_PrintFinish_1_buf_en, 32, true);
 
     const char TMC_X_Step_buf_en[] = "X_SenSitivity";
     dgusdisplay.WriteVariable(VP_TMC_X_Step_Dis, TMC_X_Step_buf_en, 32, true);
@@ -1974,8 +1973,8 @@ void DGUSScreenHandlerMKS::DGUS_LanguageDisplay(uint8_t var) {
     const uint16_t TMC_Z_Step_buf_ch[] = { 0x205A, 0xE9C1, 0xF4C3, 0xC8B6, 0x2000 };
     dgusdisplay.WriteVariable(VP_TMC_Z_Step_Dis, TMC_Z_Step_buf_ch, 16, true);
 
-    const uint16_t Info_PrinfFinsh_1_buf_ch[] = { 0xF2B4, 0xA1D3, 0xEACD, 0xC9B3, 0x2000 };
-    dgusdisplay.WriteVariable(VP_Info_PrinfFinsh_1_Dis, Info_PrinfFinsh_1_buf_ch, 32, true);
+    const uint16_t Info_PrintFinish_1_buf_ch[] = { 0xF2B4, 0xA1D3, 0xEACD, 0xC9B3, 0x2000 };
+    dgusdisplay.WriteVariable(VP_Info_PrintFinish_1_Dis, Info_PrintFinish_1_buf_ch, 32, true);
 
     const uint16_t TMC_X_Current_buf_ch[] = { 0x2058, 0xE1D6, 0xE7B5, 0xF7C1, 0x2000 };
     dgusdisplay.WriteVariable(VP_TMC_X_Current_Dis, TMC_X_Current_buf_ch, 16, true);
