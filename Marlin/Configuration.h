@@ -957,8 +957,8 @@
 #endif
 
 // Enable for DELTA kinematics and configure below
-//#define DELTA
-#if ENABLED(DELTA)
+//#define DELTA2
+#if ENABLED(DELTA2)
 
   // Make delta curves from many straight lines (linear interpolation).
   // This is a trade-off between visible corners (not enough segments)
