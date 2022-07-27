@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2021 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -19,15 +19,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
-#include "../gcode.h"
-#include "../../module/planner.h"
+/********************************************************************************
+ * @file     lcd/e3v2/jyersui/dwin_lcd.h
+ * @brief    DWIN screen control functions
+ ********************************************************************************/
 
-/**
- * M400: Finish all moves
- */
-void GcodeSuite::M400() {
+#include "../common/dwin_api.h"
 
-  planner.synchronize();
-
-}
+// Draw the degree (°) symbol
+// Color: color
+//  x/y: Upper-left coordinate of the first pixel
+void DWIN_Draw_DegreeSymbol(uint16_t Color, uint16_t x, uint16_t y);
