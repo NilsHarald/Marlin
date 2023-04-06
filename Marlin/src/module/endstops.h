@@ -86,7 +86,7 @@ enum EndstopEnum : char {
   #if HAS_X_MIN || HAS_X_MAX
     , X_ENDSTOP = TERN(X_HOME_TO_MAX, X_MAX, X_MIN)
     #if ENABLED(X_DUAL_ENDSTOPS)
-	    , X2_ENDSTOP = TERN(X_HOME_TO_MAX, X2_MAX, X2_MIN)
+      , X2_ENDSTOP = TERN(X_HOME_TO_MAX, X2_MAX, X2_MIN)
     #endif
   #endif
   #if HAS_Y_MIN || HAS_Y_MAX
@@ -115,7 +115,7 @@ enum EndstopEnum : char {
 class Endstops {
   public:
 
-    typedef IF<(NUM_ENDSTOP_STATES > 8), uint16_t, uint8_t>::type endstop_mask_t;
+    typedef bits_t(NUM_ENDSTOP_STATES) endstop_mask_t;
 
     #if ENABLED(X_DUAL_ENDSTOPS)
       static float x2_endstop_adj;
