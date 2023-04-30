@@ -222,24 +222,6 @@
   //#define SINGLENOZZLE_STANDBY_FAN
 #endif
 
-// @section multi-material
-
-/**
- * Multi-Material Unit
- * Set to one of these predefined models:
- *
- *   PRUSA_MMU1           : Průša MMU1 (The "multiplexer" version)
- *   PRUSA_MMU2           : Průša MMU2
- *   PRUSA_MMU2S          : Průša MMU2S (Requires MK3S extruder with motion sensor, EXTRUDERS = 5)
- *   EXTENDABLE_EMU_MMU2  : MMU with configurable number of filaments (ERCF, SMuFF or similar with Průša MMU2 compatible firmware)
- *   EXTENDABLE_EMU_MMU2S : MMUS with configurable number of filaments (ERCF, SMuFF or similar with Průša MMU2 compatible firmware)
- *
- * Requires NOZZLE_PARK_FEATURE to park print head in case MMU unit fails.
- * See additional options in Configuration_adv.h.
- * :["PRUSA_MMU1", "PRUSA_MMU2", "PRUSA_MMU2S", "EXTENDABLE_EMU_MMU2", "EXTENDABLE_EMU_MMU2S"]
- */
-//#define MMU_MODEL PRUSA_MMU2
-
 // A dual extruder that uses a single stepper motor
 //#define SWITCHING_EXTRUDER
 #if ENABLED(SWITCHING_EXTRUDER)
@@ -382,6 +364,24 @@
 //#define HOTEND_OFFSET_Y { 0.0, 5.00 }  // (mm) relative Y-offset for each nozzle
 //#define HOTEND_OFFSET_Z { 0.0, 0.00 }  // (mm) relative Z-offset for each nozzle
 
+// @section multi-material
+
+/**
+ * Multi-Material Unit
+ * Set to one of these predefined models:
+ *
+ *   PRUSA_MMU1           : Průša MMU1 (The "multiplexer" version)
+ *   PRUSA_MMU2           : Průša MMU2
+ *   PRUSA_MMU2S          : Průša MMU2S (Requires MK3S extruder with motion sensor, EXTRUDERS = 5)
+ *   EXTENDABLE_EMU_MMU2  : MMU with configurable number of filaments (ERCF, SMuFF or similar with Průša MMU2 compatible firmware)
+ *   EXTENDABLE_EMU_MMU2S : MMUS with configurable number of filaments (ERCF, SMuFF or similar with Průša MMU2 compatible firmware)
+ *
+ * Requires NOZZLE_PARK_FEATURE to park print head in case MMU unit fails.
+ * See additional options in Configuration_adv.h.
+ * :["PRUSA_MMU1", "PRUSA_MMU2", "PRUSA_MMU2S", "EXTENDABLE_EMU_MMU2", "EXTENDABLE_EMU_MMU2S"]
+ */
+//#define MMU_MODEL PRUSA_MMU2
+
 // @section psu control
 
 /**
@@ -522,6 +522,11 @@
  * ================================================================
  *    -4 : AD8495 with Thermocouple
  *    -1 : AD595  with Thermocouple
+ *
+ * ================================================================
+ *  SoC internal sensor
+ * ================================================================
+ *   100 : SoC internal sensor
  *
  * ================================================================
  *  Custom/Dummy/Other Thermal Sensors
@@ -1081,28 +1086,6 @@
 //===========================================================================
 
 // @section endstops
-
-// Specify here all the endstop connectors that are connected to any endstop or probe.
-// Almost all printers will be using one per axis. Probes will use one or more of the
-// extra connectors. Leave undefined any used for non-endstop and non-probe purposes.
-#define USE_XMIN_PLUG
-#define USE_YMIN_PLUG
-#define USE_ZMIN_PLUG
-//#define USE_IMIN_PLUG
-//#define USE_JMIN_PLUG
-//#define USE_KMIN_PLUG
-//#define USE_UMIN_PLUG
-//#define USE_VMIN_PLUG
-//#define USE_WMIN_PLUG
-//#define USE_XMAX_PLUG
-//#define USE_YMAX_PLUG
-//#define USE_ZMAX_PLUG
-//#define USE_IMAX_PLUG
-//#define USE_JMAX_PLUG
-//#define USE_KMAX_PLUG
-//#define USE_UMAX_PLUG
-//#define USE_VMAX_PLUG
-//#define USE_WMAX_PLUG
 
 // Enable pullup for all endstops to prevent a floating state
 #define ENDSTOPPULLUPS
@@ -1742,7 +1725,7 @@
 //#define Z_CLEARANCE_FOR_HOMING  4 // (mm) Minimal Z height before homing (G28) for Z clearance above the bed, clamps, ...
                                     // Be sure to have this much clearance over your Z_MAX_POS to prevent grinding.
 
-//#define Z_AFTER_HOMING         10 // (mm) Height to move to after homing Z
+//#define Z_AFTER_HOMING         10 // (mm) Height to move to after homing (if Z was homed)
 
 // Direction of endstops when homing; 1=MAX, -1=MIN
 // :[-1,1]
