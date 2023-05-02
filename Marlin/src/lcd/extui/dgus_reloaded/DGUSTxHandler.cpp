@@ -36,7 +36,7 @@
   #include "../../../feature/pause.h"
 #endif
 
-#if ENABLED(SDSUPPORT)
+#if HAS_MEDIA
   void DGUSTxHandler::SetFileControlState(int16_t file, bool state) {
     DGUS_Control control;
 
@@ -177,18 +177,15 @@
 
     dgus_display.WriteString((uint16_t)vp.addr, dgus_screen_handler.filelist.filename(), vp.size);
   }
-#endif // SDSUPPORT
+#endif // HAS_MEDIA
 
 void DGUSTxHandler::PositionZ(DGUS_VP &vp) {
-  float position = ExtUI::isAxisPositionKnown(ExtUI::Z) ?
-                     planner.get_axis_position_mm(Z_AXIS)
-                   : 0;
-
-  const int16_t data = dgus_display.ToFixedPoint<float, int16_t, 1>(position);
-  dgus_display.Write((uint16_t)vp.addr, Swap16(data));
+  const float position = ExtUI::isAxisPositionKnown(ExtUI::Z) ? planner.get_axis_position_mm(Z_AXIS) : 0;
+  const int32_t data = dgus_display.ToFixedPoint<float, int32_t, 2>(int32_t(position * 50.0f) / 50.0f); // Round to 0.02
+  dgus_display.Write((uint16_t)vp.addr, dgus_display.SwapBytes(data));
 }
 
-void DGUSTxHandler::Ellapsed(DGUS_VP &vp) {
+void DGUSTxHandler::Elapsed(DGUS_VP &vp) {
   char buffer[21];
   duration_t(print_job_timer.duration()).toString(buffer);
 
@@ -522,7 +519,7 @@ void DGUSTxHandler::PrintTime(DGUS_VP &vp) {
 
     dgus_display.WriteString((uint16_t)vp.addr, buffer, vp.size);
   #else
-    dgus_display.WriteStringPGM((uint16_t)vp.addr, DGUS_MSG_UNDEF, vp.size);
+    dgus_display.WriteString((uint16_t)vp.addr, F("-"), vp.size);
   #endif
 }
 
@@ -533,7 +530,7 @@ void DGUSTxHandler::LongestPrint(DGUS_VP &vp) {
 
     dgus_display.WriteString((uint16_t)vp.addr, buffer, vp.size);
   #else
-    dgus_display.WriteStringPGM((uint16_t)vp.addr, DGUS_MSG_UNDEF, vp.size);
+    dgus_display.WriteString((uint16_t)vp.addr, F("-"), vp.size);
   #endif
 }
 
@@ -544,7 +541,7 @@ void DGUSTxHandler::FilamentUsed(DGUS_VP &vp) {
 
     dgus_display.WriteString((uint16_t)vp.addr, buffer, vp.size);
   #else
-    dgus_display.WriteStringPGM((uint16_t)vp.addr, DGUS_MSG_UNDEF, vp.size);
+    dgus_display.WriteString((uint16_t)vp.addr, F("-"), vp.size);
   #endif
 }
 

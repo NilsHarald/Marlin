@@ -48,7 +48,7 @@
 ////////////////////////////////////////////
 
 #if HAS_LEVELING && ANY(LCD_BED_TRAMMING, PROBE_OFFSET_WIZARD, X_AXIS_TWIST_COMPENSATION)
-  bool leveling_was_active; // = false
+  bool menu_leveling_was_active; // = false
 #endif
 #if ANY(PROBE_MANUALLY, MESH_BED_LEVELING, X_AXIS_TWIST_COMPENSATION)
   uint8_t manual_probe_index; // = 0
@@ -270,13 +270,6 @@ void scroll_screen(const uint8_t limit, const bool is_menu) {
   else
     encoderTopLine = encoderLine;
 }
-
-#if HAS_SOUND
-  void MarlinUI::completion_feedback(const bool good/*=true*/) {
-    TERN_(HAS_TOUCH_SLEEP, wakeup_screen()); // Wake up on rotary encoder click...
-    if (good) OKAY_BUZZ(); else ERR_BUZZ();
-  }
-#endif
 
 #if HAS_LINE_TO_Z
 

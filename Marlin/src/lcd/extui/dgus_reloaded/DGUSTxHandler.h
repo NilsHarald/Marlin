@@ -28,7 +28,7 @@
 
 namespace DGUSTxHandler {
 
-  #if ENABLED(SDSUPPORT)
+  #if HAS_MEDIA
     void SetFileControlState(int16_t, bool);
     void FileType(DGUS_VP &);
     void FileName(DGUS_VP &);
@@ -37,7 +37,7 @@ namespace DGUSTxHandler {
   #endif
 
   void PositionZ(DGUS_VP &);
-  void Ellapsed(DGUS_VP &);
+  void Elapsed(DGUS_VP &);
   void Percent(DGUS_VP &);
   void StatusIcons(DGUS_VP &);
 

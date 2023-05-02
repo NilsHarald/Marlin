@@ -67,7 +67,7 @@
   #include "../../feature/power_monitor.h"
 #endif
 
-#if ENABLED(SDSUPPORT)
+#if HAS_MEDIA
   #include "../../sd/cardreader.h"
 #endif
 
@@ -96,9 +96,10 @@
     DRAWBIT_HOTEND,
     DRAWBIT_BED = HOTENDS,
     DRAWBIT_CHAMBER,
-    DRAWBIT_CUTTER
+    DRAWBIT_CUTTER,
+    DRAWBIT_COUNT
   };
-  IF<(DRAWBIT_CUTTER > 7), uint16_t, uint8_t>::type draw_bits;
+  bits_t(DRAWBIT_COUNT) draw_bits;
 #endif
 
 #if ANIM_HOTEND
@@ -741,7 +742,7 @@ void MarlinUI::draw_status_screen() {
     #endif
   }
 
-  #if ENABLED(SDSUPPORT)
+  #if HAS_MEDIA
     //
     // SD Card Symbol
     //
@@ -755,7 +756,7 @@ void MarlinUI::draw_status_screen() {
       // Corner pixel
       u8g.drawPixel(50, 43);         // 43 (or 42)
     }
-  #endif // SDSUPPORT
+  #endif // HAS_MEDIA
 
   #if HAS_PRINT_PROGRESS
     // Progress bar frame
@@ -870,7 +871,7 @@ void MarlinUI::draw_status_screen() {
     //
     // Filament sensor display if SD is disabled
     //
-    #if ENABLED(FILAMENT_LCD_DISPLAY) && DISABLED(SDSUPPORT)
+    #if ENABLED(FILAMENT_LCD_DISPLAY) && !HAS_MEDIA
       lcd_put_u8str(56, EXTRAS_2_BASELINE, wstring);
       lcd_put_u8str(102, EXTRAS_2_BASELINE, mstring);
       lcd_put_u8str(F("%"));
@@ -886,7 +887,7 @@ void MarlinUI::draw_status_screen() {
   if (PAGE_CONTAINS(STATUS_BASELINE - INFO_FONT_ASCENT, STATUS_BASELINE + INFO_FONT_DESCENT)) {
     lcd_moveto(0, STATUS_BASELINE);
 
-    #if BOTH(FILAMENT_LCD_DISPLAY, SDSUPPORT)
+    #if BOTH(FILAMENT_LCD_DISPLAY, HAS_MEDIA)
       // Alternate Status message and Filament display
       if (ELAPSED(millis(), next_filament_display)) {
         lcd_put_u8str(F(LCD_STR_FILAM_DIA));
