@@ -19,41 +19,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#pragma once
 
-#include "../core/types.h"
+#include "../../inc/MarlinConfigPre.h"
 
-typedef enum FXDTICtrlMode : uint8_t {
-  ftMotionMode_DISABLED   =  0U,
-  ftMotionMode_ENABLED    =  1U,
-  //ftMotionMode_ULENDO_FBS = 2U,
-  ftMotionMode_ZV         = 10U,
-  ftMotionMode_ZVD        = 11U,
-  ftMotionMode_EI         = 12U,
-  ftMotionMode_2HEI       = 13U,
-  ftMotionMode_3HEI       = 14U,
-  ftMotionMode_MZV        = 15U,
-  //ftMotionMode_DISCTF   = 20U
-} ftMotionMode_t;
+#if ENABLED(ONE_CLICK_PRINT)
 
-enum dynFreqMode_t : uint8_t {
-  dynFreqMode_DISABLED   = 0U,
-  dynFreqMode_Z_BASED    = 1U,
-  dynFreqMode_MASS_BASED = 2U
-};
+#include "menu.h"
 
-enum stepDirState_t {
-  stepDirState_NOT_SET = 0U,
-  stepDirState_POS     = 1U,
-  stepDirState_NEG     = 2U
-};
+void one_click_print() {
+  ui.goto_screen([]{
+    char * const filename = card.longest_filename();
+    MenuItem_confirm::select_screen(
+      GET_TEXT_F(MSG_BUTTON_PRINT), GET_TEXT_F(MSG_BUTTON_CANCEL),
+      []{
+        card.openAndPrintFile(card.filename);
+        ui.return_to_status();
+        ui.reset_status();
+      }, nullptr,
+      GET_TEXT_F(MSG_START_PRINT), filename, F("?")
+    );
+  });
+}
 
-enum {
-  FT_BIT_DIR_E, FT_BIT_STEP_E,
-  FT_BIT_DIR_Z, FT_BIT_STEP_Z,
-  FT_BIT_DIR_Y, FT_BIT_STEP_Y,
-  FT_BIT_DIR_X, FT_BIT_STEP_X,
-  FT_BIT_COUNT
-};
-
-typedef bits_t(FT_BIT_COUNT) ft_command_t;
+#endif // ONE_CLICK_PRINT
