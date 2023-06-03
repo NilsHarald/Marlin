@@ -29,7 +29,7 @@
 
 #include "../../../inc/MarlinConfigPre.h"
 
-#if ALL(DWIN_LCD_PROUI, PRINTCOUNTER)
+#if BOTH(DWIN_LCD_PROUI, PRINTCOUNTER)
 
 #include "printstats.h"
 

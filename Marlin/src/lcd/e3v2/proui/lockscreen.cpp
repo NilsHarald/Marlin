@@ -29,7 +29,7 @@
 
 #include "../../../inc/MarlinConfigPre.h"
 
-#if ALL(DWIN_LCD_PROUI, HAS_LOCKSCREEN)
+#if BOTH(DWIN_LCD_PROUI, HAS_LOCKSCREEN)
 
 #include "dwin_defines.h"
 #include "dwinui.h"

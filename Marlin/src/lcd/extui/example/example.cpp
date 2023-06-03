@@ -21,7 +21,7 @@
 
 #include "../../../inc/MarlinConfigPre.h"
 
-#if ALL(EXTUI_EXAMPLE, EXTENSIBLE_UI)
+#if BOTH(EXTUI_EXAMPLE, EXTENSIBLE_UI)
 
 #include "../ui_api.h"
 
