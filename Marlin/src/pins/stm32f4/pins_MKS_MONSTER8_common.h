@@ -263,7 +263,7 @@
   #endif
 #endif
 
-#if ANY(TFT_COLOR_UI, TFT_CLASSIC_UI)
+#if EITHER(TFT_COLOR_UI, TFT_CLASSIC_UI)
   #define TFT_CS_PIN                 EXP1_07_PIN
   #define TFT_SCK_PIN                EXP2_02_PIN
   #define TFT_MISO_PIN               EXP2_01_PIN

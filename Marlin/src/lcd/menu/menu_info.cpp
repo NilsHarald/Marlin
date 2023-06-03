@@ -26,7 +26,7 @@
 
 #include "../../inc/MarlinConfigPre.h"
 
-#if ALL(HAS_MARLINUI_MENU, LCD_INFO_MENU)
+#if BOTH(HAS_MARLINUI_MENU, LCD_INFO_MENU)
 
 #include "menu_item.h"
 

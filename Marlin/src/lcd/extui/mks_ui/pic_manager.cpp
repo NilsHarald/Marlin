@@ -379,7 +379,7 @@ uint32_t Pic_Info_Write(uint8_t *P_name, uint32_t P_size) {
 
   static void dosName2LongName(const char dosName[11], char *longName) {
     uint8_t j = 0;
-    for (uint8_t i = 0; i < 11; ++i) {
+    LOOP_L_N(i, 11) {
       if (i == 8) longName[j++] = '.';
       if (dosName[i] == '\0' || dosName[i] == ' ') continue;
       longName[j++] = dosName[i];

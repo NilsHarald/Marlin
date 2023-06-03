@@ -160,7 +160,7 @@ namespace Anycubic {
     tftSendLn(AC_msg_ready);
   }
 
-  void DgusTFT::paramInit() {
+  void DgusTFT::ParamInit() {
 
     #if ACDEBUG(AC_MARLIN)
       DEBUG_ECHOLNPGM("DgusTFT::ParamInit()");
@@ -668,11 +668,11 @@ namespace Anycubic {
 
   #if ENABLED(POWER_LOSS_RECOVERY)
 
-    void DgusTFT::powerLoss() {
+    void DgusTFT::PowerLoss() {
       // On:  5A A5 05 82 00 82 00 00
       // Off: 5A A5 05 82 00 82 00 64
       uint8_t data[] = { 0x5A, 0xA5, 0x05, 0x82, 0x00, 0x82, 0x00, uint8_t(recovery.enabled ? 0x00 : 0x64) };
-      for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
+      LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
     }
 
     void DgusTFT::powerLossRecovery() {
@@ -681,12 +681,12 @@ namespace Anycubic {
 
   #endif // POWER_LOSS_RECOVERY
 
-  void DgusTFT::homingStart() {
+  void DgusTFT::HomingStart() {
     if (!isPrintingFromMedia())
       ChangePageOfTFT(PAGE_CHS_HOMING);
   }
 
-  void DgusTFT::homingComplete() {
+  void DgusTFT::HomingComplete() {
     if (lcd_info.language == ENG && page_index_last > 120)
       page_index_last -= 120;
 
@@ -720,35 +720,35 @@ namespace Anycubic {
     TFTSer.println();
   }
 
-  void DgusTFT::sendValueToTFT(const uint16_t value, const uint16_t address) {
+  void DgusTFT::SendValueToTFT(const uint16_t value, const uint16_t address) {
     uint8_t data[] = { 0x5A, 0xA5, 0x05, 0x82, uint8_t(address >> 8), uint8_t(address & 0xFF), uint8_t(value >> 8), uint8_t(value & 0xFF) };
-    for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
+    LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
   }
 
-  void DgusTFT::requestValueFromTFT(const uint16_t address) {
+  void DgusTFT::RequestValueFromTFT(const uint16_t address) {
     uint8_t data[] = { 0x5A, 0xA5, 0x04, 0x83, uint8_t(address >> 8), uint8_t(address & 0xFF), 0x01 };
-    for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
+    LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
   }
 
-  void DgusTFT::sendTxtToTFT(const char *pdata, const uint16_t address) {
+  void DgusTFT::SendTxtToTFT(const char *pdata, const uint16_t address) {
     uint8_t data_len = strlen(pdata);
     uint8_t data[] = { 0x5A, 0xA5, uint8_t(data_len + 5), 0x82, uint8_t(address >> 8), uint8_t(address & 0xFF) };
-    for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
-    for (uint8_t i = 0; i < data_len; ++i) TFTSer.write(pdata[i]);
+    LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
+    LOOP_L_N(i, data_len) TFTSer.write(pdata[i]);
     TFTSer.write(0xFF); TFTSer.write(0xFF);
   }
 
-  void DgusTFT::sendColorToTFT(const uint16_t color, const uint16_t address) {
+  void DgusTFT::SendColorToTFT(const uint16_t color, const uint16_t address) {
     uint8_t data[] = { 0x5A, 0xA5, 0x05, 0x82, uint8_t(address >> 8), uint8_t(address & 0xFF), uint8_t(color >> 8), uint8_t(color & 0xFF) };
-    for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
+    LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
   }
 
-  void DgusTFT::sendReadNumOfTxtToTFT(const uint8_t number, const uint16_t address) {
+  void DgusTFT::SendReadNumOfTxtToTFT(const uint8_t number, const uint16_t address) {
     uint8_t data[] = { 0x5A, 0xA5, 0x04, 0x83, uint8_t(address >> 8), uint8_t(address & 0xFF), number };
-    for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
+    LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
   }
 
-  void DgusTFT::changePageOfTFT(const uint16_t page_index, const bool no_send/*=false*/) {
+  void DgusTFT::ChangePageOfTFT(const uint16_t page_index, const bool no_send/*=false*/) {
     #if ACDEBUG(AC_MARLIN)
       DEBUG_ECHOLNPGM("ChangePageOfTFT: ", page_index);
     #endif
@@ -775,7 +775,7 @@ namespace Anycubic {
 
     if (!no_send) {
       uint8_t data[] = { 0x5A, 0xA5, 0x07, 0x82, 0x00, 0x84, 0x5A, 0x01, uint8_t(data_temp >> 8), uint8_t(data_temp & 0xFF) };
-      for (uint8_t i = 0; i < COUNT(data); ++i) TFTSer.write(data[i]);
+      LOOP_L_N(i, COUNT(data)) TFTSer.write(data[i]);
     }
 
     page_index_last_2 = page_index_last;
@@ -789,7 +789,7 @@ namespace Anycubic {
     #endif
   }
 
-  void DgusTFT::fakeChangePageOfTFT(const uint16_t page_index) {
+  void DgusTFT::FakeChangePageOfTFT(const uint16_t page_index) {
     #if ACDEBUG(AC_MARLIN)
       if (page_index_saved != page_index_now)
         DEBUG_ECHOLNPGM("FakeChangePageOfTFT: ", page_index);
@@ -797,11 +797,11 @@ namespace Anycubic {
     ChangePageOfTFT(page_index, true);
   }
 
-  void DgusTFT::lcdAudioSet(const bool audio_on) {
+  void DgusTFT::LcdAudioSet(const bool audio_on) {
     // On:  5A A5 07 82 00 80 5A 00 00 1A
     // Off: 5A A5 07 82 00 80 5A 00 00 12
     uint8_t data[] = { 0x5A, 0xA5, 0x07, 0x82, 0x00, 0x80, 0x5A, 0x00, 0x00, uint8_t(audio_on ? 0x1A : 0x12) };
-    for (uint8_t i = 0; i < 10; ++i) TFTSer.write(data[i]);
+    LOOP_L_N(i, 10) TFTSer.write(data[i]);
   }
 
   bool DgusTFT::readTFTCommand() {
