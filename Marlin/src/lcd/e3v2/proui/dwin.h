@@ -67,6 +67,7 @@ enum processID : uint8_t {
   ID_WaitResponse,
   ID_Homing,
   ID_PIDProcess,
+  ID_PlotProcess,
   ID_MPCProcess,
   ID_NothingToDo
 };
@@ -344,7 +345,9 @@ void drawMaxAccelMenu();
 #if ENABLED(CLASSIC_JERK)
   void drawMaxJerkMenu();
 #endif
-void drawStepsMenu();
+#if ENABLED(EDITABLE_STEPS_PER_UNIT)
+  void drawStepsMenu();
+#endif
 #if ANY(HAS_BED_PROBE, BABYSTEPPING)
   void drawZOffsetWizMenu();
 #endif
