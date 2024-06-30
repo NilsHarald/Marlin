@@ -815,6 +815,10 @@
 
 #endif
 
+#if ANY(FYSETC_MINI_12864, MKS_MINI_12864)
+  #define U8G_SPI_USE_MODE_3 1
+#endif
+
 // ST7920-based graphical displays
 #if ANY(IS_RRD_FG_SC, LCD_FOR_MELZI, SILVER_GATE_GLCD_CONTROLLER)
   #define DOGLCD
@@ -893,10 +897,11 @@
   #endif
 #endif
 
-// FSMC/SPI TFT Panels (LVGL)
+// FSMC/SPI TFT Panels (LVGL) with encoder click wheel
 #if ENABLED(TFT_LVGL_UI)
   #define HAS_TFT_LVGL_UI 1
   #define SERIAL_RUNTIME_HOOK 1
+  #define STD_ENCODER_PULSES_PER_STEP 4
 #endif
 
 // FSMC/SPI TFT Panels
@@ -976,6 +981,17 @@
   #define DETECT_I2C_LCD_DEVICE 1
 #endif
 
+/**
+ * Ender-3 V2 DWIN with Encoder
+ */
+#if ANY(DWIN_CREALITY_LCD, DWIN_LCD_PROUI)
+  #define HAS_DWIN_E3V2_BASIC 1
+#endif
+#if ANY(HAS_DWIN_E3V2_BASIC, DWIN_CREALITY_LCD_JYERSUI)
+  #define HAS_DWIN_E3V2 1
+  #define STD_ENCODER_PULSES_PER_STEP 4
+#endif
+
 // Encoder behavior
 #ifndef STD_ENCODER_PULSES_PER_STEP
   #if ENABLED(TOUCH_SCREEN)
@@ -997,10 +1013,12 @@
   #define ENCODER_FEEDRATE_DEADZONE 6
 #endif
 
-// Shift register panels
-// ---------------------
-// 2 wire Non-latching LCD SR from:
-// https://github.com/fmalpartida/New-LiquidCrystal/wiki/schematics#user-content-ShiftRegister_connection
+/**
+ * Shift register panels
+ * ---------------------
+ * 2 wire Non-latching LCD SR from:
+ * https://github.com/fmalpartida/New-LiquidCrystal/wiki/schematics#user-content-ShiftRegister_connection
+ */
 #if ENABLED(FF_INTERFACEBOARD)
   #define SR_LCD_3W_NL    // Non latching 3 wire shift register
   #define IS_ULTIPANEL 1
@@ -1038,11 +1056,6 @@
 #if ANY(HAS_DGUS_LCD, MALYAN_LCD, ANYCUBIC_LCD_I3MEGA, ANYCUBIC_LCD_CHIRON, NEXTION_TFT, TOUCH_UI_FTDI_EVE, DWIN_LCD_PROUI)
   #define IS_EXTUI 1 // Just for sanity check.
   #define EXTENSIBLE_UI
-#endif
-
-// Aliases for LCD features
-#if ANY(DWIN_CREALITY_LCD, DWIN_LCD_PROUI, DWIN_CREALITY_LCD_JYERSUI)
-  #define HAS_DWIN_E3V2 1
 #endif
 
 // E3V2 extras
@@ -1086,6 +1099,9 @@
    *  - poweroff        (for PSU_CONTROL and HAS_MARLINUI_MENU)
    *
    *  ...and implements these MarlinUI methods:
+   *  - init_lcd
+   *  - clear_lcd
+   *  - clear_for_drawing
    *  - zoffset_overlay (if BABYSTEP_GFX_OVERLAY or MESH_EDIT_GFX_OVERLAY are supported)
    *  - draw_kill_screen
    *  - kill_screen
@@ -1594,8 +1610,6 @@
 #endif
 #if CORE_IS_XY || CORE_IS_XZ || CORE_IS_YZ
   #define IS_CORE 1
-#endif
-#if IS_CORE
   #if CORE_IS_XY
     #define CORE_AXIS_1 A_AXIS
     #define CORE_AXIS_2 B_AXIS
