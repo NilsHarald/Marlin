@@ -110,7 +110,7 @@ def disable_all_options():
             match = regex.match(line)
             if match:
                 name = match[3].upper()
-                if name in ('CONFIGURATION_H_VERSION', 'CONFIGURATION_ADV_H_VERSION'): continue
+                if name in ('CONFIGURATION_H_VERSION', 'CONFIGURATION_ADV_H_VERSION', 'CONFIG_EXAMPLES_DIR'): continue
                 if name.startswith('_'): continue
                 found = True
                 # Comment out the define
@@ -195,7 +195,7 @@ def apply_sections(cp, ckey='all'):
             apply_ini_by_name(cp, 'config:basic')
 
         # Apply historically Configuration_adv.h settings everywhere
-        # (Some of which rely on defines in 'Conditionals_LCD.h')
+        # (Some of which rely on defines in 'Conditionals-2-LCD.h')
         elif ckey in ('adv', 'advanced'):
             apply_ini_by_name(cp, 'config:advanced')
 
