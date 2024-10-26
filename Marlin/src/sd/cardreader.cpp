@@ -22,6 +22,10 @@
 
 #include "../inc/MarlinConfig.h"
 
+/**
+ * cardreader.cpp - SD card / USB flash drive file handling interface
+ */
+
 #if HAS_MEDIA
 
 //#define DEBUG_CARDREADER
@@ -34,6 +38,8 @@
 
 #if ENABLED(DWIN_CREALITY_LCD)
   #include "../lcd/e3v2/creality/dwin.h"
+#elif ENABLED(SOVOL_SV06_RTS)
+  #include "../lcd/sovol_rts/sovol_rts.h"
 #endif
 
 #include "../module/planner.h"        // for synchronize
@@ -827,8 +833,17 @@ void CardReader::removeFile(const char * const name) {
   #endif
 }
 
-void CardReader::report_status() {
-  if (isPrinting() || isPaused()) {
+void CardReader::report_status(TERN_(QUIETER_AUTO_REPORT_SD_STATUS, const bool isauto/*=false*/)) {
+  const bool has_job = isStillPrinting() || isPaused();
+
+  #if ENABLED(QUIETER_AUTO_REPORT_SD_STATUS)
+    static uint32_t old_sdpos = 0;
+    if (!has_job) old_sdpos = 0;
+    if (isauto && sdpos == old_sdpos) return;
+    if (has_job) old_sdpos = sdpos;
+  #endif
+
+  if (has_job) {
     SERIAL_ECHOPGM(STR_SD_PRINTING_BYTE, sdpos);
     SERIAL_CHAR('/');
     SERIAL_ECHOLN(filesize);
@@ -1446,6 +1461,7 @@ void CardReader::fileHasFinished() {
     if (jobRecoverFileExists()) {
       recovery.init();
       removeFile(recovery.filename);
+      TERN_(SOVOL_SV06_RTS, poweroff_continue = false);
       #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
         SERIAL_ECHOLN(F("Power-loss file delete"), jobRecoverFileExists() ? F(" failed.") : F("d."));
       #endif
