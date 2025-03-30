@@ -1342,7 +1342,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, probe_deployed);
             }
             else {
-              probe_deployed ^= true;
+              FLIP(probe_deployed);
               probe.set_deployed(probe_deployed);
               drawCheckbox(row, probe_deployed);
             }
@@ -1355,7 +1355,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
             drawCheckbox(row, livemove);
           }
           else {
-            livemove ^= true;
+            FLIP(livemove);
             drawCheckbox(row, livemove);
           }
           break;
@@ -1400,7 +1400,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, use_probe);
             }
             else {
-              use_probe ^= true;
+              FLIP(use_probe);
               drawCheckbox(row, use_probe);
               if (use_probe) {
                 popupHandler(Popup_Level);
@@ -1616,7 +1616,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
                 planner.synchronize();
                 redrawMenu();
               }
-              liveadjust ^= true;
+              FLIP(liveadjust);
               drawCheckbox(row, liveadjust);
             }
             break;
@@ -2719,7 +2719,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
             drawCheckbox(row, eeprom_settings.time_format_textual);
           }
           else {
-            eeprom_settings.time_format_textual ^= true;
+            FLIP(eeprom_settings.time_format_textual);
             drawCheckbox(row, eeprom_settings.time_format_textual);
           }
           break;
@@ -2877,7 +2877,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, ui.sound_on);
             }
             else {
-              ui.sound_on ^= true;
+              FLIP(ui.sound_on);
               drawCheckbox(row, ui.sound_on);
             }
             break;
@@ -2960,7 +2960,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, runout.enabled);
             }
             else {
-              runout.enabled ^= true;
+              FLIP(runout.enabled);
               drawCheckbox(row, runout.enabled);
             }
             break;
@@ -3068,7 +3068,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawMenu(ID_Advanced, ADVANCED_TMC);
             break;
 
-          #if AXIS_IS_TMC(X)
+          #if X_IS_TRINAMIC
             case TMC_STEPPER_CURRENT_X:
 
               static float stepper_current_x;
@@ -3084,7 +3084,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               break;
           #endif
 
-          #if AXIS_IS_TMC(Y)
+          #if Y_IS_TRINAMIC
             case TMC_STEPPER_CURRENT_Y:
               static float stepper_current_y;
               if (draw) {
@@ -3098,7 +3098,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               break;
           #endif
 
-          #if AXIS_IS_TMC(Z)
+          #if Z_IS_TRINAMIC
             case TMC_STEPPER_CURRENT_Z:
               static float stepper_current_z;
               if (draw) {
@@ -3112,7 +3112,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               break;
           #endif
 
-          #if AXIS_IS_TMC(E0)
+          #if E0_IS_TRINAMIC
             case TMC_STEPPER_CURRENT_E:
               static float stepper_current_e;
               if (draw) {
@@ -3403,7 +3403,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, mesh_conf.viewer_print_value);
             }
             else {
-              mesh_conf.viewer_print_value ^= true;
+              FLIP(mesh_conf.viewer_print_value);
               drawCheckbox(row, mesh_conf.viewer_print_value);
             }
             break;
@@ -3413,7 +3413,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, mesh_conf.viewer_asymmetric_range);
             }
             else {
-              mesh_conf.viewer_asymmetric_range ^= true;
+              FLIP(mesh_conf.viewer_asymmetric_range);
               drawCheckbox(row, mesh_conf.viewer_asymmetric_range);
             }
             break;
@@ -3596,7 +3596,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, mesh_conf.goto_mesh_value);
             }
             else {
-              mesh_conf.goto_mesh_value ^= true;
+              FLIP(mesh_conf.goto_mesh_value);
               current_position.z = 0;
               mesh_conf.manual_mesh_move(true);
               drawCheckbox(row, mesh_conf.goto_mesh_value);
@@ -3957,7 +3957,7 @@ void JyersDWIN::menuItemHandler(const uint8_t menu, const uint8_t item, bool dra
               drawCheckbox(row, runout.enabled);
             }
             else {
-              runout.enabled ^= true;
+              FLIP(runout.enabled);
               drawCheckbox(row, runout.enabled);
             }
             break;
