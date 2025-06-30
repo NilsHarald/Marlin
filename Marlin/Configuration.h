@@ -86,7 +86,7 @@
 
 // Choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_TRIGORILLA_14      
+  #define MOTHERBOARD BBOARD_BTT_SKR_V1_4      
 #endif
 
 // @section serial
