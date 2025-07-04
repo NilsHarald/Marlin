@@ -64,6 +64,10 @@
   #define Z_MIN_PROBE_PIN                   PB1
 #endif
 
+#ifndef Z_MIN_PIN
+  #define Z_MIN_PIN  Z_MIN_PROBE_PIN        
+#endif
+
 //
 // Probe enable
 //
