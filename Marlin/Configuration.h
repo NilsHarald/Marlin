@@ -1498,7 +1498,7 @@
  *    - Normally-closed (NC) also connect to GND.
  *    - Normally-open (NO) also connect to 5V.
  */
-//#define Z_MIN_PROBE_PIN PC14
+#define Z_MIN_PROBE_PIN PC14
 
 /**
  * Probe Type
