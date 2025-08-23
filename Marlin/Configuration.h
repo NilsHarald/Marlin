@@ -742,7 +742,7 @@
   #else
     #define DEFAULT_Kp  13.77
     #define DEFAULT_Ki   0.62
-    #define DEFAULT_Kd  76.30
+    #define DEFAULT_Kd  76.30   //NHS
   #endif
 #else
   #define BANG_MAX 255    // Limit hotend current while in bang-bang mode; 255=full current
@@ -850,7 +850,7 @@
     // TODO get real PID values for Ultrabase Bed
     #define DEFAULT_bedKp 191.17
     #define DEFAULT_bedKi  31.03
-    #define DEFAULT_bedKd 785.07
+    #define DEFAULT_bedKd 785.07   //NHS
   #endif
 
   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
@@ -1384,8 +1384,8 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-#define DEFAULT_ACCELERATION          500    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  800    // E acceleration for retracts
+#define DEFAULT_ACCELERATION          1000    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  1000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   1000    // X, Y, Z acceleration for travel (non printing) moves
 
 /**
@@ -2472,7 +2472,7 @@
   #define XY_SIDE_AD 200
 
   // Or, set the XY skew factor directly:
-  //#define XY_SKEW_FACTOR 0.0
+  #define XY_SKEW_FACTOR 0.0
 
   //#define SKEW_CORRECTION_FOR_Z
   #if ENABLED(SKEW_CORRECTION_FOR_Z)
