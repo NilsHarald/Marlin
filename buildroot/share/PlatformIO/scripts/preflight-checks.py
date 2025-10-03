@@ -65,13 +65,14 @@ if pioutil.is_pio_build():
         # Useful values
         project_dir = Path(env['PROJECT_DIR'])
         config_files = ("Configuration.h", "Configuration_adv.h")
+        mpath = project_dir / "Marlin"
 
         #
         # Update old macros BOTH and EITHER in configuration files
         #
         conf_modified = False
         for f in config_files:
-            conf_path = project_dir / "Marlin" / f
+            conf_path = mpath / f
             if conf_path.is_file():
                 with open(conf_path, 'r', encoding="utf8") as file:
                     text = file.read()
@@ -101,13 +102,16 @@ if pioutil.is_pio_build():
             raise SystemExit(err)
 
         #
-        # Check for Config files in two common incorrect places
+        # Check for Config files *only* existing in common incorrect places
         #
-        for p in (project_dir, project_dir / "config"):
-            for f in config_files:
-                if (p / f).is_file():
-                    err = "ERROR: Config files found in directory %s. Please move them into the Marlin subfolder." % p
-                    raise SystemExit(err)
+        if (mpath / "Config.h").is_file() or ((mpath / config_files[0]).is_file() and (mpath / config_files[1]).is_file()):
+            pass
+        else:
+            for p in (project_dir, project_dir / "config"):
+                for f in config_files:
+                    if (p / f).is_file():
+                        err = "ERROR: Config files found in directory %s. Please move them into the Marlin subfolder." % p
+                        raise SystemExit(err)
 
         #
         # Find the name.cpp.o or name.o and remove it
