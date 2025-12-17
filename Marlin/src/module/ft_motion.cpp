@@ -185,18 +185,15 @@ void FTMotion::loop() {
   }
 
   // Set busy status for use by planner.busy()
-  const bool oldBusy = busy;
   busy = stepping.is_busy();
-  if (oldBusy && !busy) moving_axis_flags.reset();
-
 }
 
 #if HAS_FTM_SHAPING
 
   void FTMotion::update_shaping_params() {
     #define UPDATE_SHAPER(A) \
-      shaping.A.ena = ftMotion.cfg.shaper.A != ftMotionShaper_NONE; \
-      shaping.A.set_axis_shaping_A(cfg.shaper.A, cfg.zeta.A, cfg.vtol.A); \
+      shaping.A.ena = IS_SHAPING(ftMotion.cfg.shaper.A); \
+      shaping.A.set_axis_shaping_A(cfg.shaper.A, cfg.zeta.A OPTARG(HAS_FTM_EI_SHAPING, cfg.vtol.A)); \
       shaping.A.set_axis_shaping_N(cfg.shaper.A, cfg.baseFreq.A, cfg.zeta.A);
 
     SHAPED_MAP(UPDATE_SHAPER);
@@ -207,19 +204,20 @@ void FTMotion::loop() {
 
 #if ENABLED(FTM_SMOOTHING)
 
+  #include "planner.h"
+
   void FTMotion::update_smoothing_params() {
-    #define _SMOOTH_PARAM(A) smoothing.A.set_smoothing_time(cfg.smoothingTime.A);
+    #define _SMOOTH_PARAM(A) smoothing.A.set_time(cfg.smoothingTime.A);
     CARTES_MAP(_SMOOTH_PARAM);
     smoothing.refresh_largest_delay_samples();
   }
 
-  void FTMotion::set_smoothing_time(uint8_t axis, const float s_time) {
-    #define _SMOOTH_CASE(A) case _AXIS(A): cfg.smoothingTime.A = s_time; break;
-    switch (axis) {
-      default:
-      CARTES_MAP(_SMOOTH_CASE);
-    }
+  bool FTMotion::set_smoothing_time(const AxisEnum axis, const float s_time) {
+    if (!WITHIN(s_time, 0.0f, FTM_MAX_SMOOTHING_TIME)) return false;
+    planner.synchronize();
+    cfg.smoothingTime[axis] = s_time;
     update_smoothing_params();
+    return true;
   }
 
 #endif // FTM_SMOOTHING
@@ -307,6 +305,21 @@ void FTMotion::init() {
     }
   }
 
+  // Update trajectory generator type from G-code or UI
+  bool FTMotion::updateTrajectoryType(const TrajectoryType type) {
+    if (type == trajectoryType) return false;
+    switch (type) {
+      default: return false;
+      case TrajectoryType::TRAPEZOIDAL:
+      case TrajectoryType::POLY5:
+      case TrajectoryType::POLY6:
+        break;
+    }
+    planner.synchronize();
+    setTrajectoryType(type);
+    return true;
+  }
+
 #endif // FTM_POLYS
 
 FSTR_P FTMotion::getTrajectoryName() {
@@ -349,6 +362,7 @@ bool FTMotion::plan_next_block() {
       if (current_block->is_sync_pos()) stepper._set_position(current_block->position);
       continue;
     }
+    ensure_float_precision();
 
     #if ENABLED(POWER_LOSS_RECOVERY)
       recovery.info.sdpos = current_block->sdpos;
@@ -375,23 +389,15 @@ bool FTMotion::plan_next_block() {
     const xyze_pos_t& moveDist = current_block->dist_mm;
     ratio = moveDist / totalLength;
 
-    const float mmps = totalLength / current_block->step_event_count, // (mm/step) Distance for each step
-                initial_speed = mmps * current_block->initial_rate,   // (mm/s) Start feedrate
-                final_speed = mmps * current_block->final_rate;       // (mm/s) End feedrate
-
     // Plan the trajectory using the trajectory generator
-    currentGenerator->plan(initial_speed, final_speed, current_block->acceleration, current_block->nominal_speed, totalLength);
+    currentGenerator->plan(current_block->entry_speed, current_block->exit_speed, current_block->acceleration, current_block->nominal_speed, totalLength);
 
     endPos_prevBlock += moveDist;
 
     TERN_(FTM_HAS_LIN_ADVANCE, use_advance_lead = current_block->use_advance_lead);
 
-    #define _SET_MOVE_END(A) do{ \
-      if (moveDist.A) { \
-        moving_axis_flags.A = true; \
-        axis_move_dir.A = moveDist.A > 0; \
-      } \
-    }while(0);
+    axis_move_dir = current_block->direction_bits;
+    #define _SET_MOVE_END(A) moving_axis_flags.A = moveDist.A ? true : false;
 
     LOGICAL_AXIS_MAP(_SET_MOVE_END);
 
@@ -403,6 +409,42 @@ bool FTMotion::plan_next_block() {
     return true;
   }
 }
+
+#if HAS_EXTRUDERS
+
+  /**
+   * Ensure extruder position stays within floating point precision bounds.
+   * Float32 numbers have 23 bits of precision, so the minimum increment ("resolution") around a value x is:
+   * resolution = 2^(floor(log2(|x|)) - 23)
+   * By resetting at ±1'000mm (1 meter), we get a minimum resolution of ~ 0.00006mm, enough for smoothing to work well.
+   */
+  void FTMotion::ensure_float_precision() {
+    constexpr float FTM_POSITION_WRAP_THRESHOLD = 1000; // (mm) Reset when position exceeds this to prevent floating point precision loss
+    if (ABS(endPos_prevBlock.E) < FTM_POSITION_WRAP_THRESHOLD) return;
+
+    const float offset = -endPos_prevBlock.E;
+
+    endPos_prevBlock.E = 0;
+
+    // Offset extruder shaping buffer
+    #if ALL(HAS_FTM_SHAPING, FTM_SHAPER_E)
+      for (uint32_t i = 0; i < ftm_zmax; ++i) shaping.E.d_zi[i] += offset;
+    #endif
+
+    // Offset extruder smoothing buffer
+    #if ENABLED(FTM_SMOOTHING)
+      for (uint8_t i = 0; i < FTM_SMOOTHING_ORDER; ++i) smoothing.E.smoothing_pass[i] += offset;
+    #endif
+
+    // Offset linear advance previous position
+    prev_traj_e += offset;
+
+    // Offset stepper current position
+    const int64_t delta_steps_q48_16 = offset * planner.settings.axis_steps_per_mm[block_extruder_axis] * (1ULL << 16);
+    stepping.curr_steps_q48_16.E += delta_steps_q48_16;
+  }
+
+#endif // HAS_EXTRUDERS
 
 xyze_float_t FTMotion::calc_traj_point(const float dist) {
   xyze_float_t traj_coords;
@@ -466,17 +508,20 @@ xyze_float_t FTMotion::calc_traj_point(const float dist) {
 
   #if ENABLED(FTM_SMOOTHING)
 
-    #define _SMOOTHEN(A) /* Approximate gaussian smoothing via chained EMAs */ \
-      if (smoothing.A.alpha > 0.0f) { \
-        float smooth_val = traj_coords.A; \
-        for (uint8_t _i = 0; _i < FTM_SMOOTHING_ORDER; ++_i) { \
-          smoothing.A.smoothing_pass[_i] += (smooth_val - smoothing.A.smoothing_pass[_i]) * smoothing.A.alpha; \
-          smooth_val = smoothing.A.smoothing_pass[_i]; \
-        } \
-        traj_coords.A = smooth_val; \
+    // Approximate Gaussian smoothing via chained EMAs
+    auto _smoothen = [&](const AxisEnum axis, axis_smoothing_t &smoo) {
+      if (smoo.alpha <= 0.0f) return;
+      float smooth_val = traj_coords[axis];
+      for (uint8_t _i = 0; _i < FTM_SMOOTHING_ORDER; ++_i) {
+        smoo.smoothing_pass[_i] += (smooth_val - smoo.smoothing_pass[_i]) * smoo.alpha;
+        smooth_val = smoo.smoothing_pass[_i];
       }
+      traj_coords[axis] = smooth_val;
+    };
 
+    #define _SMOOTHEN(A) _smoothen(_AXIS(A), smoothing.A);
     CARTES_MAP(_SMOOTHEN);
+
     max_total_delay += smoothing.largest_delay_samples;
 
   #endif // FTM_SMOOTHING
@@ -487,27 +532,29 @@ xyze_float_t FTMotion::calc_traj_point(const float dist) {
       max_total_delay += shaping.largest_delay_samples;
 
     // Apply shaping if active on each axis
-    #define _SHAPE(A) \
-      do { \
-        const uint32_t group_delay = ftMotion.cfg.axis_sync_enabled \
-            ? max_total_delay - TERN0(FTM_SMOOTHING, smoothing.A.delay_samples) \
-            : -shaping.A.Ni[0]; \
-        /* α=1−exp(−(dt / (τ / order))) */ \
-        shaping.A.d_zi[shaping.zi_idx] = traj_coords.A; \
-        traj_coords.A = 0; \
-        for (uint32_t i = 0; i <= shaping.A.max_i; i++) { \
-          /* echo_delay is always positive since Ni[i] = echo_relative_delay - group_delay + max_total_delay */ \
-          /* where echo_relative_delay > 0 and group_delay ≤ max_total_delay */ \
-          const uint32_t echo_delay = group_delay + shaping.A.Ni[i]; \
-          int32_t udiff = shaping.zi_idx - echo_delay; \
-          if (udiff < 0) udiff += FTM_ZMAX; \
-          traj_coords.A += shaping.A.Ai[i] * shaping.A.d_zi[udiff]; \
-        } \
-      } while (0);
+    auto _shape = [&](const AxisEnum axis, axis_shaping_t &shap OPTARG(FTM_SMOOTHING, const axis_smoothing_t &smoo)) {
+      const uint32_t group_delay = ftMotion.cfg.axis_sync_enabled
+          ? max_total_delay - TERN0(FTM_SMOOTHING, smoo.delay_samples)
+          : -shap.Ni[0];
+      //
+      // α = 1 − exp(−(dt / (τ / order)))
+      //
+      shap.d_zi[shaping.zi_idx] = traj_coords[axis];
+      traj_coords[axis] = 0;
+      for (uint32_t i = 0; i <= shap.max_i; i++) {
+        // echo_delay is always positive since Ni[i] = echo_relative_delay - group_delay + max_total_delay
+        // where echo_relative_delay > 0 and group_delay ≤ max_total_delay
+        const uint32_t echo_delay = group_delay + shap.Ni[i];
+        int32_t udiff = shaping.zi_idx - echo_delay;
+        if (udiff < 0) udiff += ftm_zmax;
+        traj_coords[axis] += shap.Ai[i] * shap.d_zi[udiff];
+      }
+    };
 
+    #define _SHAPE(A) _shape(_AXIS(A), shaping.A OPTARG(FTM_SMOOTHING, smoothing.A));
     SHAPED_MAP(_SHAPE);
 
-    if (++shaping.zi_idx == (FTM_ZMAX)) shaping.zi_idx = 0;
+    if (++shaping.zi_idx == ftm_zmax) shaping.zi_idx = 0;
 
   #endif // HAS_FTM_SHAPING
 
