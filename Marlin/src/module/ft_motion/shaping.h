@@ -142,7 +142,7 @@ typedef struct Shaping {
   axis_shaping_t SHAPED_AXIS_NAMES;
   uint32_t largest_delay_samples;
   // Shaping an axis makes it lag with respect to the others by certain amount, the "centroid delay"
-  // Ni[0] stores how far in the past the first step would need to happen to avoid desynchronisation (it is therefore negative).
+  // Ni[0] stores how far in the past the first step would need to happen to avoid desynchronization (it is therefore negative).
   // Of course things can't be done in the past, so when shaping is applied, the all axes are delayed by largest_delay_samples
   // minus their own centroid delay. This makes them all be equally delayed and therefore in synch.
   void refresh_largest_delay_samples() { largest_delay_samples = -_MIN(SHAPED_LIST(X.Ni[0], Y.Ni[0], Z.Ni[0], E.Ni[0])); }
@@ -150,5 +150,10 @@ typedef struct Shaping {
     #define _RESET_ZI(A) ZERO(A.d_zi);
     SHAPED_MAP(_RESET_ZI);
     zi_idx = 0;
+  }
+  void fill(const xyze_float_t pos) {
+    #define _FILL_ZI(A) for (uint32_t i = 0; i < ftm_zmax; i++) A.d_zi[i] = pos.A;
+    SHAPED_MAP(_FILL_ZI);
+    #undef _FILL_ZI
   }
 } shaping_t;
