@@ -70,7 +70,10 @@ millis_t DGUSScreenHandler::eeprom_save = 0;
 
 void DGUSScreenHandler::init() {
   dgus.init();
-  moveToScreen(DGUS_ScreenID::BOOT, true);
+  if (booted)
+    triggerFullUpdate(); // Reinit LCD hardware then refresh current screen
+  else
+    moveToScreen(DGUS_ScreenID::BOOT, true);
 }
 
 void DGUSScreenHandler::ready() {
@@ -107,8 +110,7 @@ void DGUSScreenHandler::loop() {
   }
 
   #if ENABLED(POWER_LOSS_RECOVERY)
-    if (booted && powerLossRecoveryAvailable)
-    {
+    if (booted && powerLossRecoveryAvailable) {
       triggerScreenChange(DGUS_ScreenID::POWERCONTINUE);
       powerLossRecoveryAvailable = false;
     }
@@ -209,7 +211,7 @@ void DGUSScreenHandler::userConfirmation() {
     if (confirm_return_screen >= DGUS_ScreenID::FILE1 && confirm_return_screen <= DGUS_ScreenID::FILE4)
       dgus_sdcard_handler.onPageLoad(DGUS_SCREEN_TO_PAGE(confirm_return_screen));
 
-    #ifdef DEBUG_DGUSLCD
+    #if ENABLED(DEBUG_DGUSLCD)
       DEBUG_ECHOLNPGM("trig confirmed, ret:", (uint16_t)confirm_return_screen);
     #endif
 
@@ -282,7 +284,7 @@ void DGUSScreenHandler::configurationStoreRead(bool success) {
   }
 }
 
-void DGUSScreenHandler::playTone(const uint16_t frequency, const uint16_t duration) {
+void DGUSScreenHandler::playTone(const uint16_t frequency, const uint16_t duration/*=0*/) {
   if (WITHIN(frequency, 1, 255)) {
     if (WITHIN(duration, 1, 255))
       dgus.playSound((uint8_t)frequency, (uint8_t)duration);
@@ -355,11 +357,8 @@ void DGUSScreenHandler::addCurrentPageStringLength(size_t stringLength, size_t t
 
   void DGUSScreenHandler::sdCardRemoved() {
     sdPrintFilename = noFileSelected;
-
-    if (getCurrentScreen() >= DGUS_ScreenID::FILE1
-      && getCurrentScreen() <= DGUS_ScreenID::FILE4) {
+    if (WITHIN(getCurrentScreen(), DGUS_ScreenID::FILE1, DGUS_ScreenID::FILE4))
       triggerTempScreenChange(DGUS_ScreenID::SDCARDCHECK, DGUS_ScreenID::HOME);
-    }
   }
 
   void DGUSScreenHandler::sdCardError() {}
@@ -373,7 +372,7 @@ void DGUSScreenHandler::addCurrentPageStringLength(size_t stringLength, size_t t
 #endif
 
 #if HAS_PID_HEATING
-  void DGUSScreenHandler::pidTuning(const ExtUI::result_t rst) {
+  void DGUSScreenHandler::pidTuning(const ExtUI::pidresult_t rst) {
     dgus.playSound(3);
   }
 #endif
