@@ -209,6 +209,7 @@ WEAK void SystemClock_Config(void)
   {
     /* Initialization Error */
   }
+
   if(HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     /* Initialization Error */
