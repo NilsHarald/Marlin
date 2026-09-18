@@ -71,6 +71,7 @@
   #define MOTHERBOARD BOARD_BTT_SKR_V1_4
 #endif
 
+// my defines to stop warnings
 #define  NO_AUTO_ASSIGN_WARNING 
 #define EDITABLE_STEPS_PER_UNIT
 
