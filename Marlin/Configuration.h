@@ -3448,6 +3448,10 @@
  * CR10SPROV2 (T5UID1)
  *  - Stock Creality CR-10S Pro V2 screen. Uses the screen's factory DWIN_SET.
  *
+ * SERMOON_D1 (T5L)
+ *  - Download https://www.crealitycloud.com/downloads/firmware/sermoon-series/sermoon-d1
+ *  - Copy the DWIN_SET folder from the firmware package to the SD card.
+ *
  * Flash display with DGUS Displays for Marlin:
  *  - Format the SD card to FAT32 with an allocation size of 4kb.
  *  - Download files as specified for your type of display.
