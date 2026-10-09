@@ -920,11 +920,11 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
  */
 #if ENABLED(DIFFERENTIAL_EXTRUDER)
   #if EXTRUDERS != 1
-    #error "DIFFERENTIAL EXTRUDER currently requires a single extruder (EXTRUDERS = 1)."
+    #error "DIFFERENTIAL_EXTRUDER currently requires a single extruder (EXTRUDERS = 1)."
   #elif !IS_FULL_CARTESIAN
-    #error "DIFFERENTIAL EXTRUDER requires standard Cartesian kinematics."
+    #error "DIFFERENTIAL_EXTRUDER requires standard Cartesian kinematics."
   #elif !defined(CPU_32_BIT)
-    #error "DIFFERENTIAL EXTRUDER requires a 32-bit CPU."
+    #error "DIFFERENTIAL_EXTRUDER requires a 32-bit CPU."
   #endif
 #endif
 
@@ -3051,6 +3051,10 @@ static_assert(NUM_SERVOS <= NUM_SERVO_PLUGS, "NUM_SERVOS (or some servo index) i
 
 #if MANY(TFT_RES_320x240, TFT_RES_480x272, TFT_RES_480x320, TFT_RES_1024x600)
   #error "Please select only one of TFT_RES_320x240, TFT_RES_480x272, TFT_RES_480x320, or TFT_RES_1024x600."
+#endif
+
+#if ENABLED(TFT_FONT_LARGE) && !ALL(TFT_COLOR_UI, HAS_UI_1024x600)
+  #error "TFT_FONT_LARGE requires TFT_COLOR_UI with a 1024x600 TFT (TFT_RES_1024x600)."
 #endif
 
 #if ENABLED(TFT_LVGL_UI)
