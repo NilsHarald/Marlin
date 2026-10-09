@@ -2209,8 +2209,9 @@
  */
 //#define PREHEAT_BEFORE_LEVELING
 #if ENABLED(PREHEAT_BEFORE_LEVELING)
-  #define LEVELING_NOZZLE_TEMP 120   // (°C) Only applies to E0 at this time
-  #define LEVELING_BED_TEMP     50
+  #define LEVELING_NOZZLE_TEMP     120   // (°C) Only applies to E0 at this time
+  #define LEVELING_BED_TEMP         50
+  //#define LEVELING_HEAT_SOAK_TIME 60   // (s) Time to wait for heat soak after heaters reach temperature
 #endif
 
 /**
@@ -3350,6 +3351,10 @@
  * CR10SPROV2 (T5UID1)
  *  - Stock Creality CR-10S Pro V2 screen. Uses the screen's factory DWIN_SET.
  *
+ * SERMOON_D1 (T5L)
+ *  - Download https://www.crealitycloud.com/downloads/firmware/sermoon-series/sermoon-d1
+ *  - Copy the DWIN_SET folder from the firmware package to the SD card.
+ *
  * Flash display with DGUS Displays for Marlin:
  *  - Format the SD card to FAT32 with an allocation size of 4kb.
  *  - Download files as specified for your type of display.
@@ -3566,6 +3571,8 @@
    * :['NOTOSANS', 'UNIFONT', 'HELVETICA']
    */
   #define TFT_FONT  NOTOSANS
+  //#define TFT_FONT_LARGE    // Use larger fonts for better visibility. (TFT_RES_1024x600 with NOTOSANS or UNIFONT)
+  //#define TFT_NO_TINY_FONT  // A small numerical font may be used for meshes, etc. Eschew this font to save 1.1k.
 
   /**
    * TFT Theme for Color UI. Choose one of the following or add a new one to 'Marlin/src/lcd/tft/themes' directory
