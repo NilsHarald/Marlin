@@ -159,6 +159,13 @@ const PinName digitalPin[] = {
   PC_2,  //A2 BED D130
 };
 
+// Analog (Ax) pin number array, used by STM32duino 2.x. Ax is digital pin NUM_ANALOG_FIRST + x.
+const uint32_t analogInputPin[] = {
+  NUM_ANALOG_FIRST + 0,  // A0
+  NUM_ANALOG_FIRST + 1,  // A1
+  NUM_ANALOG_FIRST + 2,  // A2
+};
+
 #ifdef __cplusplus
 }
 #endif
