@@ -478,7 +478,7 @@ void Motion::report_position_projected() {
       // CORE and Markforged kinematics
       switch (axis) {
         default: break;
-        case X_AXIS: case Y_AXIS: MAP(_MAP_RESTORE, X, Y); break;
+        case X_AXIS: case Y_AXIS: MAP(_MAP_RESTORE, X, X2, Y, Y2); break;
         case Z_AXIS: MAP(_MAP_RESTORE, Z, Z2, Z3, Z4); break;
       }
 
@@ -1885,8 +1885,8 @@ float Motion::get_move_distance(const xyze_pos_t &diff OPTARG(HAS_ROTATIONAL_AXE
             xyze_pos_t new_pos = pos_now;
             if (idex_mode == DXC_DUPLICATION_MODE)
               new_pos.x = x0_pos + duplicate_extruder_x_offset;
-            else
-              new_pos.x = _MIN(X_BED_SIZE - x0_pos, X_MAX_POS);
+            else // Mirror around the bed center, but not past the T1 max (X2_MAX_POS or M218 T1 X)
+              new_pos.x = _MIN(X_BED_SIZE - x0_pos, _MAX(hotend_offset[1].x, X2_MAX_POS));
 
             // Move duplicate extruder into the correct position
             if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Set planner X", inactive_extruder_x, " ... Line to X", new_pos.x);
