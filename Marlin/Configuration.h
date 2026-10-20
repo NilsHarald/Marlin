@@ -299,7 +299,7 @@
 
 /**
  * Two separate X-carriages with extruders that connect to a moving part
- * via a solenoid docking mechanism. Requires SOL1_PIN and SOL2_PIN.
+ * via a solenoid docking mechanism. Requires SOL0_PIN and SOL1_PIN.
  */
 //#define PARKING_EXTRUDER
 
@@ -3503,6 +3503,11 @@
 // Touch-screen LCD for Anycubic Vyper
 //
 //#define ANYCUBIC_LCD_VYPER
+
+//
+// Touch-screen LCD for Anycubic Kobra
+//
+//#define ANYCUBIC_LCD_KOBRA
 
 //
 // Sovol SV-06 Resistive Touch Screen
