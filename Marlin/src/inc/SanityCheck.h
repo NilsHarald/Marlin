@@ -221,15 +221,19 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
   #error "SERIAL_XON_XOFF and SERIAL_STATS_* features not supported on USB-native AVR devices."
 #endif
 
-// Serial DMA is only available for some STM32 MCUs, HC32 and GD32
+// Serial DMA is only available for some STM32 MCUs, HC32, GD32 and AT32
 #if ENABLED(SERIAL_DMA)
-  #if ANY(ARDUINO_ARCH_HC32, ARDUINO_ARCH_MFL)
+  #if ANY(ARDUINO_ARCH_HC32, ARDUINO_ARCH_MFL, ARDUINO_ARCH_AT32)
     // See HAL/.../inc/SanityCheck.h
   #elif DISABLED(HAL_STM32) || NONE(STM32F0xx, STM32F1xx, STM32F2xx, STM32F4xx, STM32F7xx, STM32H7xx)
     #error "SERIAL_DMA is only available for some STM32 MCUs and requires HAL/STM32."
   #elif !defined(HAL_UART_MODULE_ENABLED) || defined(HAL_UART_MODULE_ONLY)
     #error "SERIAL_DMA requires STM32 platform HAL UART (without HAL_UART_MODULE_ONLY)."
   #endif
+#endif
+
+#if ENABLED(CREALITY_BOOTLOADER_INFO_DUMP) && DISABLED(HAL_STM32) && !defined(__STM32F1__) && !defined(ARDUINO_ARCH_MFL)
+  #error "CREALITY_BOOTLOADER_INFO_DUMP requires an STM32F1 or GD32 based Creality v4.2.x board."
 #endif
 
 /**
@@ -635,6 +639,26 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
 #endif
 
 /**
+ * 3D Chameleon requirements
+ */
+#if HAS_CHAMELEON
+  #if EXTRUDERS < 2 || EXTRUDERS > 4
+    #undef SINGLENOZZLE
+    #error "CHAMELEON requires 2 to 4 EXTRUDERS (one per filament). Please update your Configuration."
+  #elif NUM_AXES < 3
+    #error "CHAMELEON requires X, Y, and Z axes."
+  #elif !HAS_TEMP_HOTEND
+    #error "CHAMELEON requires a hotend temperature sensor (TEMP_SENSOR_0)."
+  #elif !defined(CHAMELEON_BUTTON_AXIS) || !defined(CHAMELEON_BUTTON_POS)
+    #error "CHAMELEON requires CHAMELEON_BUTTON_AXIS and CHAMELEON_BUTTON_POS. Please update your Configuration_adv.h."
+  #elif CHAMELEON_PRESS_MM <= 0
+    #error "CHAMELEON_PRESS_MM must be greater than 0."
+  #elif CHAMELEON_PULSE_MS < 100
+    #error "CHAMELEON_PULSE_MS must be at least 100."
+  #endif
+#endif
+
+/**
  * Options only for EXTRUDERS > 1
  */
 #if HAS_MULTI_EXTRUDER
@@ -936,6 +960,31 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
 #if ANY(SWITCHING_TOOLHEAD, MAGNETIC_SWITCHING_TOOLHEAD, ELECTROMAGNETIC_SWITCHING_TOOLHEAD)
   constexpr float thpx[] = SWITCHING_TOOLHEAD_X_POS;
   static_assert(COUNT(thpx) == EXTRUDERS, "SWITCHING_TOOLHEAD_X_POS must be an array EXTRUDERS long.");
+#endif
+
+/**
+ * Magnetic Switching Toolhead: sliding a tool out of its dock (to SWITCHING_TOOLHEAD_X_SECURITY)
+ * must not carry it to the position of the next dock in that direction, where another tool is parked.
+ * Marlin doesn't know how wide a tool is, so this is only a warning for the worst case.
+ */
+#if ENABLED(MAGNETIC_SWITCHING_TOOLHEAD)
+  namespace SwitchingToolheadCheck {
+    constexpr float xpos[] = SWITCHING_TOOLHEAD_X_POS, xsec[] = SWITCHING_TOOLHEAD_X_SECURITY;
+    static_assert(COUNT(xsec) == EXTRUDERS, "SWITCHING_TOOLHEAD_X_SECURITY must be an array EXTRUDERS long.");
+    constexpr bool slide_reaches_next_dock() {
+      for (uint8_t i = 0; i < EXTRUDERS; ++i) {
+        const float slide = xsec[i] - xpos[i];
+        for (uint8_t j = 0; j < EXTRUDERS; ++j) {
+          const float gap = xpos[j] - xpos[i];
+          if (i != j && slide * gap > 0 && (slide < 0 ? -slide : slide) >= (gap < 0 ? -gap : gap)) return true;
+        }
+      }
+      return false;
+    }
+    template<bool bad> struct SlideCheck { };
+    template<> struct [[deprecated("SWITCHING_TOOLHEAD_X_SECURITY slides a tool as far as the next dock. A tool slid that far collides with the tool parked there.")]] SlideCheck<true> { };
+    [[maybe_unused]] static SlideCheck<slide_reaches_next_dock()> slide_check;
+  }
 #endif
 
 /**
@@ -1246,6 +1295,8 @@ static_assert(NUM_SERVOS <= NUM_SERVO_PLUGS, "NUM_SERVOS (or some servo index) i
       #error "DELTA requires GRID_MAX_POINTS_X and GRID_MAX_POINTS_Y to be 3 or higher."
     #endif
   #endif
+  static_assert(X_MIN_POS < 0 && Y_MIN_POS < 0 && X_MAX_POS > 0 && Y_MAX_POS > 0,
+    "DELTA requires the bed center at X0 Y0. Set [XY]_MIN_POS to -(PRINTABLE_RADIUS) and [XY]_MAX_POS to PRINTABLE_RADIUS.");
 #endif
 
 /**
@@ -3068,6 +3119,13 @@ static_assert(NUM_SERVOS <= NUM_SERVO_PLUGS, "NUM_SERVOS (or some servo index) i
 #endif
 
 /**
+ * Creality WiFi box options are part of the RTS screen support
+ */
+#if ANY(CREALITY_WIFI, MENU_RESET_WIFI) && DISABLED(CREALITY_RTS)
+  #error "CREALITY_WIFI and MENU_RESET_WIFI require CREALITY_RTS."
+#endif
+
+/**
  * MKS WiFi module. Works with any UI, or none, but it needs its own UART,
  * the ESP control pins, and media to transfer files to.
  */
@@ -3923,6 +3981,13 @@ static_assert(COUNT(sanity_arr_3) >= LOGICAL_AXES,  "DEFAULT_MAX_ACCELERATION re
 static_assert(COUNT(sanity_arr_3) <= DISTINCT_AXES, "DEFAULT_MAX_ACCELERATION has too many elements." _EXTRA_NOTE);
 static_assert(_PLUS_TEST(3), "DEFAULT_MAX_ACCELERATION values must be positive.");
 
+#if ENABLED(DELTA)
+  #define _XYZ_SAME_TEST(A) (sanity_arr_##A[X_AXIS] == sanity_arr_##A[Y_AXIS] && sanity_arr_##A[X_AXIS] == sanity_arr_##A[Z_AXIS])
+  static_assert(_XYZ_SAME_TEST(2), "DELTA requires the same DEFAULT_MAX_FEEDRATE for X, Y, and Z.");
+  static_assert(_XYZ_SAME_TEST(3), "DELTA requires the same DEFAULT_MAX_ACCELERATION for X, Y, and Z.");
+  #undef _XYZ_SAME_TEST
+#endif
+
 #if MAXIMUM_STEPPER_RATE
   #define _RATE_ASSERT(A) static_assert(sanity_arr_1[_AXIS(A)] * sanity_arr_2[_AXIS(A)] <= MAXIMUM_STEPPER_RATE, \
     "Slow down! DEFAULT_MAX_FEEDRATE[" STRINGIFY(A) "] * DEFAULT_AXIS_STEPS_PER_UNIT[" STRINGIFY(A) "] > MAXIMUM_STEPPER_RATE (" STRINGIFY(MAXIMUM_STEPPER_RATE) ")." \
@@ -4119,6 +4184,8 @@ static_assert(_PLUS_TEST(3), "DEFAULT_MAX_ACCELERATION values must be positive."
   #error "USB_CS_PIN and USB_INTR_PIN (or USE_OTG_USB_HOST) are required for USB_FLASH_DRIVE_SUPPORT."
 #elif ENABLED(USE_OTG_USB_HOST) && DISABLED(HAS_OTG_USB_HOST_SUPPORT)
   #error "The current board does not support USE_OTG_USB_HOST."
+#elif ENABLED(USE_OTG_USB_HOST) && !defined(USBHOST)
+  #error "USE_OTG_USB_HOST requires a '..._usb_flash_drive' PlatformIO environment."
 #endif
 
 #if ENABLED(SD_FIRMWARE_UPDATE) && !defined(__AVR_ATmega2560__)
@@ -4713,6 +4780,25 @@ static_assert(_PLUS_TEST(3), "DEFAULT_MAX_ACCELERATION values must be positive."
   #endif
 #endif
 
+/**
+ * Require certain features for DGUS_LCD_UI SERMOON_V1.
+ */
+#if DGUS_UI_IS(SERMOON_V1)
+  #if !(HOTENDS == 1 && EXTRUDERS == 1)
+    #error "DGUS_LCD_UI SERMOON_V1 requires 1 hotend and 1 extruder."
+  #elif !HAS_HEATED_BED
+    #error "DGUS_LCD_UI SERMOON_V1 requires a heated bed."
+  #elif !HAS_FAN
+    #error "DGUS_LCD_UI SERMOON_V1 requires a fan."
+  #elif !HAS_MEDIA
+    #error "DGUS_LCD_UI SERMOON_V1 requires SDSUPPORT."
+  #elif !defined(PREHEAT_1_TEMP_HOTEND) || !defined(PREHEAT_2_TEMP_HOTEND)
+    #error "DGUS_LCD_UI SERMOON_V1 requires 2 preheating presets."
+  #elif NUM_RUNOUT_SENSORS > 1
+    #error "DGUS_LCD_UI SERMOON_V1 requires NUM_RUNOUT_SENSORS < 2."
+  #endif
+#endif
+
 // JTAG support in the HAL
 #if ENABLED(DISABLE_DEBUG) && !defined(JTAGSWD_DISABLE)
   #error "DISABLE_DEBUG is not supported for the selected MCU/Board."
@@ -4858,10 +4944,14 @@ static_assert(_PLUS_TEST(3), "DEFAULT_MAX_ACCELERATION values must be positive."
 #endif // FT_MOTION
 
 /**
- * Resonance Test requires EMERGENCY_PARSER
+ * Resonance Test requires a 32-bit CPU and EMERGENCY_PARSER
  */
-#if ENABLED(RESONANCE_TEST) && DISABLED(EMERGENCY_PARSER)
-  #error "EMERGENCY_PARSER is required with RESONANCE_TEST (to cancel the test)."
+#if ENABLED(RESONANCE_TEST)
+  #ifdef __AVR__
+    #error "RESONANCE_TEST requires a 32-bit CPU."
+  #elif DISABLED(EMERGENCY_PARSER)
+    #error "EMERGENCY_PARSER is required with RESONANCE_TEST (to cancel the test)."
+  #endif
 #endif
 
 // Multi-Stepping Limit
