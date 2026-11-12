@@ -622,6 +622,11 @@
     #endif
   #endif
 
+  // G-code thumbnails (embedded images in the SD file header)
+  #if ENABLED(CREALITY_RTS)
+    #define HAS_GCODE_THUMBNAIL 1
+  #endif
+
 #else // !HAS_MEDIA
   #undef REINIT_NOISY_LCD
 #endif
@@ -3093,7 +3098,7 @@
   #define HAS_TEMPERATURE 1
 #endif
 
-#if HAS_TEMPERATURE && ANY(HAS_MARLINUI_MENU, HAS_DWIN_E3V2, HAS_DGUS_LCD_CLASSIC)
+#if HAS_TEMPERATURE && ANY(HAS_MARLINUI_MENU, HAS_DWIN_E3V2, HAS_DGUS_LCD_CLASSIC, CREALITY_RTS)
   #ifdef PREHEAT_10_LABEL
     #define PREHEAT_COUNT 10
   #elif defined(PREHEAT_9_LABEL)
@@ -3262,7 +3267,7 @@
  * Advanced Pause - Filament Change
  */
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-  #if ANY(HAS_MARLINUI_MENU, EXTENSIBLE_UI, DWIN_CREALITY_LCD_JYERSUI, SOVOL_SV06_RTS) || ALL(EMERGENCY_PARSER, HOST_PROMPT_SUPPORT)
+  #if ANY(HAS_MARLINUI_MENU, EXTENSIBLE_UI, DWIN_CREALITY_LCD_JYERSUI, SOVOL_SV06_RTS, CREALITY_RTS) || ALL(EMERGENCY_PARSER, HOST_PROMPT_SUPPORT)
     #define M600_PURGE_MORE_RESUMABLE 1  // UI provides some way to Purge More / Resume
   #endif
   #ifndef FILAMENT_CHANGE_SLOW_LOAD_LENGTH
@@ -3272,6 +3277,17 @@
 
 #if HAS_MULTI_EXTRUDER && !defined(TOOLCHANGE_FS_EXTRA_PRIME)
   #define TOOLCHANGE_FS_EXTRA_PRIME 0
+#endif
+
+/**
+ * Switching Toolhead docks may be at either side of the Y axis.
+ * SWITCHING_TOOLHEAD_DOCK_DIR is the direction from the docks toward the work area:
+ *   +1 for docks at the low-Y side (front), -1 for docks at the high-Y side (rear).
+ * It is inferred from the half of the Y travel that SWITCHING_TOOLHEAD_Y_POS lies in.
+ * Y_SECURITY, Y_CLEAR and Y_RELEASE are distances from the dock toward the work area.
+ */
+#if ANY(SWITCHING_TOOLHEAD, MAGNETIC_SWITCHING_TOOLHEAD, ELECTROMAGNETIC_SWITCHING_TOOLHEAD)
+  #define SWITCHING_TOOLHEAD_DOCK_DIR ((SWITCHING_TOOLHEAD_Y_POS) < ((Y_MIN_POS) + (Y_MAX_POS)) * 0.5f ? 1 : -1)
 #endif
 
 /**
@@ -3568,6 +3584,10 @@
       #define LCD_HEIGHT TERN(IS_ULTIPANEL, 4, 2)
     #endif
   #endif
+  // Galaxy UI: TFT backlight brightness is set in the UI and saved with M500
+  #if ALL(NOVIN3DP_GALAXY_UI, TFT_COLOR_UI) && PIN_EXISTS(TFT_BACKLIGHT) && !defined(HAS_LCD_BRIGHTNESS)
+    #define HAS_LCD_BRIGHTNESS 1
+  #endif
   // Prepare the LCD to show the bootscreen early in setup
   #if ENABLED(SHOW_BOOTSCREEN) && ANY(HAS_LCD_CONTRAST, HAS_LCD_BRIGHTNESS)
     #define HAS_EARLY_LCD_SETTINGS 1
@@ -3605,7 +3625,7 @@
 #endif
 
 // Flag whether hex_print.cpp is needed
-#if ANY(AUTO_BED_LEVELING_UBL, M100_FREE_MEMORY_WATCHER, DEBUG_GCODE_PARSER, TMC_DEBUG, MARLIN_DEV_MODE, DEBUG_CARDREADER, M20_TIMESTAMP_SUPPORT, HAS_STM32_UID, I2C_SCANNER)
+#if ANY(AUTO_BED_LEVELING_UBL, M100_FREE_MEMORY_WATCHER, DEBUG_GCODE_PARSER, TMC_DEBUG, MARLIN_DEV_MODE, DEBUG_CARDREADER, M20_TIMESTAMP_SUPPORT, HAS_STM32_UID, I2C_SCANNER, CREALITY_BOOTLOADER_INFO_DUMP)
   #define NEED_HEX_PRINT 1
 #endif
 

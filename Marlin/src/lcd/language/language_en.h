@@ -228,6 +228,7 @@ namespace LanguageNarrow_en {
   LSTR MSG_INFO_BOARD_MENU                = _UxGT("Board Info");
   LSTR MSG_INFO_THERMISTOR_MENU           = _UxGT("Thermistors");
   LSTR MSG_INFO_EXTRUDERS                 = _UxGT("Extruders");
+  LSTR MSG_INFO_MMUFWVERSION              = _UxGT("MMU Firmware Version");
   LSTR MSG_INFO_BAUDRATE                  = _UxGT("Baud");
   LSTR MSG_INFO_PROTOCOL                  = _UxGT("Protocol");
   LSTR MSG_CASE_LIGHT                     = _UxGT("Case Light");
@@ -1101,7 +1102,7 @@ namespace LanguageNarrow_en {
 
 namespace LanguageWide_en {
   using namespace LanguageNarrow_en;
-  #if LCD_WIDTH > 20 || HAS_DWIN_E3V2
+  #if LCD_WIDTH > 21 || HAS_DWIN_E3V2
     LSTR MSG_PREHEAT_1_END                = _UxGT("Preheat ") PREHEAT_1_LABEL _UxGT(" Hotend");
     LSTR MSG_PREHEAT_1_END_E              = _UxGT("Preheat ") PREHEAT_1_LABEL _UxGT(" Hotend ~");
     LSTR MSG_PREHEAT_1_SETTINGS           = _UxGT("Preheat ") PREHEAT_1_LABEL _UxGT(" Settings");
