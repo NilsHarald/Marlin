@@ -3336,6 +3336,19 @@ static_assert(NUM_SERVOS <= NUM_SERVO_PLUGS, "NUM_SERVOS (or some servo index) i
 #endif
 
 /**
+ * CAN bus requires a supported HAL and the board's CAN pins
+ */
+#if ENABLED(CAN_BUS)
+  #ifndef HAL_STM32
+    #error "CAN_BUS is currently only supported on STM32 (HAL/STM32)."
+  #elif !PINS_EXIST(CAN_RX, CAN_TX)
+    #error "CAN_BUS requires CAN_RX_PIN and CAN_TX_PIN. Define them in Configuration.h if your board's pins file lacks them."
+  #elif !WITHIN(CAN_BITRATE, 10000, 1000000)
+    #error "CAN_BITRATE must be from 10000 to 1000000 (classic CAN)."
+  #endif
+#endif
+
+/**
  * The MKS WiFi module drives its serial port directly, bypassing MarlinSerial
  */
 #if ENABLED(MKS_WIFI_MODULE)
@@ -4903,9 +4916,6 @@ static_assert(_PLUS_TEST(3), "DEFAULT_MAX_ACCELERATION values must be positive."
  */
 #if ENABLED(FT_MOTION)
   static_assert(FTM_BUFFER_SIZE >= 4 && (FTM_BUFFER_SIZE & (FTM_BUFFER_SIZE - 1u)) == 0, "FTM_BUFFER_SIZE must be a power of two (128, 256, 512, ...).");
-  #if ENABLED(MIXING_EXTRUDER)
-    #error "FT_MOTION does not currently support MIXING_EXTRUDER."
-  #endif
   #if !HAS_X_AXIS
     static_assert(FTM_DEFAULT_SHAPER_X == ftMotionShaper_NONE, "Without any linear axes FTM_DEFAULT_SHAPER_X must be ftMotionShaper_NONE.");
   #endif
