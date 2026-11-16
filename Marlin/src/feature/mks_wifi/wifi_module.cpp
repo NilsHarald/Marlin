@@ -116,7 +116,7 @@ volatile WIFI_DMA_RCV_FIFO wifiDmaRcvFifo;
 
 volatile WIFI_TRANS_ERROR wifiTransError;
 
-static bool need_ok_later = false;
+static uint8_t need_ok_later = 0; // Lines in espGcodeFifo whose ok is held back
 
 extern volatile WIFI_STATE wifi_link_state;
 extern WIFI_PARA wifiPara;
@@ -956,6 +956,7 @@ static void wifi_gcode_exec(uint8_t * const cmd_line) {
 
   // Handle some M commands here
   if (mStr) {
+    MKSW_SYNC_PRINT_STATE();
     cmd_value = atoi(mStr + 1);
     char * const spStr = strchr(mStr, ' ');
 
@@ -1102,6 +1103,7 @@ static void wifi_gcode_exec(uint8_t * const cmd_line) {
                   TERN_(HAS_EXTRUDERS, planner.set_flow(0, 100));
                   E_TERN_(planner.set_flow(1, 100));
                   card.startOrResumeFilePrinting();
+                  MKSW_JOB_STARTED();
                   TERN_(POWER_LOSS_RECOVERY, recovery.prepare());
                   MKSW_UI_CLEAR_ONCE();
                 }
@@ -1110,6 +1112,7 @@ static void wifi_gcode_exec(uint8_t * const cmd_line) {
           }
           else if (MKSW_PRINT_STATE == PAUSED) {
             MKSW_PRINT_STATE = RESUMING;
+            MKSW_RESUME_PRINT();
             MKSW_UI_CLEAR();
             MKSW_UI_TIME_START();
 
@@ -1135,7 +1138,7 @@ static void wifi_gcode_exec(uint8_t * const cmd_line) {
           MKSW_UI_CLEAR();
 
           #if HAS_MEDIA
-            card.pauseSDPrint();
+            MKSW_PAUSE_PRINT();
             MKSW_PRINT_STATE = PAUSING;
           #endif
           MKSW_UI_SHOW_PREVIEW();
@@ -1285,18 +1288,17 @@ static void wifi_gcode_exec(uint8_t * const cmd_line) {
       default:
         strcat_P((char *)cmd_line, PSTR("\n"));
 
-        uint32_t left = espGcodeFifo.r - espGcodeFifo.w - 1;
-        if (espGcodeFifo.r > espGcodeFifo.w) left += WIFI_GCODE_BUFFER_SIZE;
+        const uint32_t left = espGcodeFifo.free();
 
         if (left >= strlen((const char *)cmd_line)) {
           for (uint32_t index = 0; index < strlen((const char *)cmd_line); index++) {
             espGcodeFifo.Buffer[espGcodeFifo.w] = cmd_line[index];
             espGcodeFifo.w = (espGcodeFifo.w + 1) % (WIFI_GCODE_BUFFER_SIZE);
           }
-          if (left - (WIFI_GCODE_BUFFER_LEAST_SIZE) >= strlen((const char *)cmd_line))
+          if (left >= strlen((const char *)cmd_line) + (WIFI_GCODE_BUFFER_LEAST_SIZE))
             send_ok_to_wifi();
           else
-            need_ok_later = true;
+            need_ok_later++;
         }
         break;
     }
@@ -1305,18 +1307,17 @@ static void wifi_gcode_exec(uint8_t * const cmd_line) {
     // Add another linefeed to the command, terminate with null
     strcat_P((char *)cmd_line, PSTR("\n"));
 
-    uint32_t left_g = espGcodeFifo.r - espGcodeFifo.w - 1;
-    if (espGcodeFifo.r > espGcodeFifo.w) left_g += WIFI_GCODE_BUFFER_SIZE;
+    const uint32_t left_g = espGcodeFifo.free();
 
     if (left_g >= strlen((char * const)cmd_line)) {
       for (uint32_t index = 0; index < strlen((char * const)cmd_line); index++) {
         espGcodeFifo.Buffer[espGcodeFifo.w] = cmd_line[index];
         espGcodeFifo.w = (espGcodeFifo.w + 1) % (WIFI_GCODE_BUFFER_SIZE);
       }
-      if (left_g - (WIFI_GCODE_BUFFER_LEAST_SIZE) >= strlen((char * const)cmd_line))
+      if (left_g >= strlen((char * const)cmd_line) + (WIFI_GCODE_BUFFER_LEAST_SIZE))
         send_ok_to_wifi();
       else
-        need_ok_later = true;
+        need_ok_later++;
     }
   }
 }
@@ -1834,7 +1835,7 @@ void stopEspTransfer() {
   upload_time_sec = 0;
   upload_size = 0;
   esp_state = TRANSFER_IDLE;
-  need_ok_later = false;
+  need_ok_later = 0;
 
   // Reset DMA receive FIFO so no stale buffers leak into the next transfer
   for (uint8_t i = 0; i < TRANS_RCV_FIFO_BLOCK_NUM; i++)
@@ -1929,8 +1930,9 @@ void wifi_rcv_handle() {
       if (wifiTransError.flag != 0x1) WIFI_IO1_RESET();
       getDataF = 1;
     }
-    if (need_ok_later && !queue.ring_buffer.full()) {
-      need_ok_later = false;
+    // Send the held-back oks once the buffer has room for another line
+    for (uint32_t left = espGcodeFifo.free(); need_ok_later && left >= (WIFI_GCODE_BUFFER_LEAST_SIZE); left -= (WIFI_GCODE_BUFFER_LEAST_SIZE)) {
+      need_ok_later--;
       send_ok_to_wifi();
     }
   }
@@ -1969,6 +1971,7 @@ void wifi_rcv_handle() {
 }
 
 void wifi_looping() {
+  MKSW_SYNC_PRINT_STATE();
   do {
     wifi_rcv_handle();
     hal.watchdog_refresh();
@@ -1978,11 +1981,14 @@ void wifi_looping() {
 /**
  * Configured defaults for the network settings. Called by settings.reset(),
  * so a stored SSID from EEPROM is not overwritten at boot.
+ * Without WIFI_SSID the SSID stays empty, so the module keeps its own network.
  */
 void mks_wifi_reset_settings() {
   OBJZERO(mks_wifi);
-  strcpy_P((char *)mks_wifi.ssid, PSTR(WIFI_AP_NAME));
-  strcpy_P((char *)mks_wifi.key, PSTR(WIFI_KEY_CODE));
+  #ifdef WIFI_SSID
+    strcpy_P((char *)mks_wifi.ssid, PSTR(WIFI_AP_NAME));
+    strcpy_P((char *)mks_wifi.key, PSTR(WIFI_KEY_CODE));
+  #endif
   mks_wifi.mode = TERN(MKS_WIFI_AP_MODE, AP_MODEL, STA_MODEL);
 }
 
